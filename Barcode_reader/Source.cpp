@@ -9,6 +9,30 @@
 using namespace cv;
 using namespace std;
 
+void detectBarcode(Mat inputImg);
+string type2str(int type) {
+    string r;
+
+    uchar depth = type & CV_MAT_DEPTH_MASK;
+    uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+    switch (depth) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+    }
+
+    r += "C";
+    r += (chans + '0');
+
+    return r;
+}
+
 int main(int, char**) {
     Mat frame;
     Mat greyscaleFrame;
@@ -54,12 +78,60 @@ int main(int, char**) {
         imshow("Greyscale", greyscaleFrame);
         imshow("Thresholded", thresholdedFrame);
         if (waitKey(5) >= 0) {
-            break;
+            detectBarcode(thresholdedFrame);
+            break; // could put barcode check code here instead if you wanted
         }
     }
 
-    imshow("poggers", thresholdedFrame);
+    
     // the camera will be deinitialized automatically in VideoCapture destructor
     
+    system("pause");
+    
     return 0;
+}
+
+
+
+void detectBarcode(Mat inputImgPointer) {
+    // assuming input Mat has been thresholded
+    // take middle line in image (horizontally)
+    Mat inputImg = inputImgPointer.clone();
+    int channels = inputImg.channels(); // should always be 1 (for thresholded / binary pixel images)
+    int imgHeight = inputImg.size().height;
+    int imgWidth = inputImg.size().width;
+    int type = inputImg.type();
+    String typeStr = type2str(type); // is generally of type CV_8UC1
+    int halfwayRow = imgHeight / 2;
+    //int* pixel = new int[imgWidth]; //initialising a dynamic array for the row of pixels along the image's horizontal centreline
+    // this dynamic array works, but debugger doesn't understand it, so it only shows the first value of the array when debugging
+    int pixel[640];
+    // hardcoding BAD
+
+    
+    int barcodeStartCol; //starting column of the barcode (first (left most) black region)
+    bool barcodeStartFlag = false; //flag for determining whether the first column has been found or not
+
+    int barcodeEndCol; //last column of the barcode (last (right most) black region)
+
+    for (int col = 0; col < imgWidth; col++) {
+        pixel[col] = inputImg.at<uchar>(Point(col, halfwayRow)); // (row, col)
+        if (barcodeStartFlag == false && pixel[col] == 0) {
+            barcodeStartCol = col;
+            barcodeStartFlag = true;
+        }
+        if (pixel[col] == 0) {
+            barcodeEndCol = col;
+        }
+    }
+
+    // count numbers in each bar
+        // scan along until you see a black bar
+    
+
+    // get T values
+    // use T to work out characters and parity
+    // use to detet barcode orientation
+    // set characters and parity
+    return;
 }
