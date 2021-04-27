@@ -125,33 +125,12 @@ void detectBarcode(Mat inputImgPointer) {
         }
     }
 
-    int barcodeWidth = barcodeEndCol - barcodeStartCol;
-    //int* finalBarcode = new int[barcodeWidth]; // final dynamic array of barcode as 0 or 255 values
-
-    // guard bars
-        // guard bars are always 101
-        // they give us the unit length of a barcode "1" strip
-    int unitSize = 0;
-    int tolerance = 3; // how many pixels wider or shorter than 1 unit a bar / white space can be before being considered something else
-
-    // while loop to count from start of barcode (a 1 on the guard bar no matter the orientation) to the end of that 1, to gauge scale
-    for (int i = barcodeStartCol; pixel[i] == 0; i++) { //keep incrementing i (column) until pixel goes white
-        unitSize++;
-    }
-
-    // count the first 6 digits on the left
-    // find the central guard bar
-    // count the 6 digits on the right
-
-
-
-    // need to find what 1 unit of width looks like
-        // find minimum run of black pixels?
-
+    // count numbers in each bar
+        // scan along until you see a black bar
+    
 
     // get T values
     // use T to work out characters and parity
-    // obtain orientation
     // use to detet barcode orientation
     // set characters and parity
 
@@ -332,15 +311,6 @@ void detectBarcode(Mat inputImgPointer) {
     }
     else if (strcmp(outParity, "OEEOEO") == 0) {
         country = 9;
-    }
-
-
-
-
-
-    switch (outParity) {
-        case [O O O O O O] :
-
     }
 
 
