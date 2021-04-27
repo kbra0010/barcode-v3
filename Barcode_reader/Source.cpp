@@ -133,5 +133,197 @@ void detectBarcode(Mat inputImgPointer) {
     // use T to work out characters and parity
     // use to detet barcode orientation
     // set characters and parity
+
+    char outParity[6];
+    int outVal[6];
+    int country;
+
+    //Using t value arrarys - assuming 4 arrays of length 12 with values for each character
+    for (int i = 0; i < 6; i++) {
+        switch (T1[i]) { //setting row value, moving through column options
+            case 2:
+                switch (T2[i]) {
+                    case 2:
+                        outParity[i] = 'E';
+                        outVal[i] = 6;
+                        break;
+                    case 3:
+                        outParity[i] = 'O';
+                        outVal[i] = 0;
+                        break;
+                    case 4:
+                        outParity[i] = 'E';
+                        outVal[i] = 4;
+                        break;
+                    case 5:
+                        outParity[i] = 'O';
+                        outVal[i] = 3;
+                        break;
+                    }
+                    break;
+            case 3:
+                switch (T2[i]) {
+                    case 2:
+                        outParity[i] = 'O';
+                        outVal[i] = 9;
+                        break;
+                    case 3:
+                        outParity[i] = 'E';
+                        if (T4[i] == 2) {
+                            outVal[i] = 2;
+                        }
+                        else if (T4[i] == 3) {
+                            outVal[i] = 0;
+                        }
+                    case 4:
+                        outParity[i] = 'O';
+                        if (T4[i] == 2) {
+                            outVal[i] = 1;
+                        }
+                        else if (T4[i] == 1) {
+                            outVal[i] = 7;
+                        }
+                    case 5:
+                        outParity[i] = 'E';
+                        outVal[i] = 5;
+                        break;
+                    }
+                break;
+            case 4:
+                switch (T2[i]) {
+                    case 2:
+                        outParity[i] = 'E';
+                        outVal[i] = 9;
+                        break;
+                    case 3:
+                        outParity[i] = 'O';
+                        if (T4[i] == 2) {
+                            outVal[i] = 2;
+                        }
+                        else if (T4[i] == 1) {
+                            outVal[i] = 8;
+                        }
+                    case 4:
+                        outParity[i] = 'E';
+                        if (T4[i] == 1) {
+                            outVal[i] = 1;
+                        }
+                        else if (T4[i] == 2) {
+                            outVal[i] = 7;
+                        }
+                    case 5:
+                        outParity[i] = 'O';
+                        outVal[i] = 5;
+                        break;
+                    }
+                break;
+            case 5:
+                switch (T2[i]) {
+                    case 2:
+                        outParity[i] = 'O';
+                        outVal[i] = 6;
+                        break;
+                    case 3:
+                        outParity[i] = 'E';
+                        outVal[i] = 0;
+                        break;
+                    case 4:
+                        outParity[i] = 'O';
+                        outVal[i] = 4;
+                        break;
+                    case 5:
+                        outParity[i] = 'E';
+                        outVal[i] = 3;
+                        break;
+                    }
+                    break;
+         }
+    }
+    // --- DECODING RIGHT SIDE ---
+    int leftVal[6];
+
+        
+
+
+    // --- CREATING FINAL ARRAY ---
+    int barray[12];
+
+    barray = outVal + leftVal;
+
+
+    // --- CHECK SUM ---
+    // Right to left, sum all odd digits, multiply results by 3
+    // Right to left, sum even digits
+    // Add the two numbers and mod 10 result
+    // REPLACE ALL barray PLACEHOLDER
+    int oddSum, evenSum, oeSum, checkSum;
+
+
+    // i cycling through odd digits of array, starting at digit 1 (position 0)
+    for (int i = 0; i < len(barray); i = i+2) {
+        oddSum = oddSum + barray[i];     // i cycling through odd digits of array, starting at digit 1 (position 0)
+        evenSum = evenSum + barray[i - 1];      // i-1 allowing access to all the even positions of array
+    }
+    oeSum = 3 * oddSum + evenSum;
+    checkSum = oeSum % 10;
+   
+
+    // --- PARITY CODED COUNTRY CODE ---
+    /*
+        O O O O O O = 0
+		O O E O E E = 1
+		O O E E O E = 2
+		O O E E E O = 3
+		O E O O E E = 4
+		O E E O O E = 5
+		O E E E O O = 6
+		O E O E O E = 7
+		O E O E E O = 8
+        O E E O E O = 9
+    */
+
+    if (strcmp(outParity, "OOOOOO") == 0) {
+        country = 0;
+    }
+    else if (strcmp(outParity, "OOEOEE") == 0) {
+        country = 1;
+    }
+    else if (strcmp(outParity, "OOEEOE") == 0) {
+        country = 2;
+    }
+    else if (strcmp(outParity, "OOEEEO") == 0) {
+        country = 3;
+    }
+    else if (strcmp(outParity, "OEOOEE") == 0) {
+        country = 4;
+    }
+    else if (strcmp(outParity, "OEEOOE") == 0) {
+        country = 5;
+    }
+    else if (strcmp(outParity, "OEEEOO") == 0) {
+        country = 6;
+    }
+    else if (strcmp(outParity, "OEOEOE") == 0) {
+        country = 7;
+    }
+    else if (strcmp(outParity, "OEOEEO") == 0) {
+        country = 8;
+    }
+    else if (strcmp(outParity, "OEEOEO") == 0) {
+        country = 9;
+    }
+
+
+
+
+
+    switch (outParity) {
+        case [O O O O O O] :
+
+    }
+
+
+
+
     return;
 }
