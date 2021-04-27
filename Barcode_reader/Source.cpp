@@ -126,16 +126,16 @@ void detectBarcode(Mat inputImgPointer) {
     }
 
     int barcodeWidth = barcodeEndCol - barcodeStartCol;
-    int* finalBarcode = new int[barcodeWidth]; // final dynamic array of barcode as 0 or 255 values
+    //int* finalBarcode = new int[barcodeWidth]; // final dynamic array of barcode as 0 or 255 values
 
     // guard bars
         // guard bars are always 101
         // they give us the unit length of a barcode "1" strip
-    int unitSize;
+    int unitSize = 0;
     int tolerance = 3; // how many pixels wider or shorter than 1 unit a bar / white space can be before being considered something else
 
     // while loop to count from start of barcode (a 1 on the guard bar no matter the orientation) to the end of that 1, to gauge scale
-    for (unitSize = barcodeStartCol; finalBarcode[unitSize] == 0; unitSize++) { //keep incrementing i (column) until pixel goes white
+    for (int i = barcodeStartCol; pixel[i] == 0; i++) { //keep incrementing i (column) until pixel goes white
         unitSize++;
     }
 
