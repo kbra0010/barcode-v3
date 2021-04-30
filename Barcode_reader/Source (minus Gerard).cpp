@@ -128,15 +128,8 @@ void detectBarcode(Mat inputImgPointer) {
         }
     }
 
-    // count numbers in each bar
-        // scan along until you see a black bar
-    
-
-    // get T values
-    // use T to work out characters and parity
-    // use to detet barcode orientation
-    // set characters and parity
-
+    int barcodeWidth = barcodeEndCol - barcodeStartCol;
+    //int* finalBarcode = new int[barcodeWidth]; // final dynamic array of barcode as 0 or 255 values
 
     // finding digit 1 start bar
     int digitStartPixel[12]; //index is the digit number (0th being the first digit), specifies pixel at which that number starts
@@ -156,7 +149,7 @@ void detectBarcode(Mat inputImgPointer) {
     for (int i = barcodeStartCol; pixel[i] == 0; i++) { //keep incrementing i (column) until pixel goes white
         unitSize++;
     }
-    
+
 
 
     ///*
@@ -198,14 +191,14 @@ void detectBarcode(Mat inputImgPointer) {
     int centralGuardPixel = (barcodeStartCol + barcodeEndCol) / 2; // in the middle of a 0
 
     // seeking algos for central guard bar midpoint
-    for (int col = centralGuardPixel; col < centralGuardPixel + 4; col++) {
+    for (int col = centralGuardPixel; col < centralGuardPixel + 6; col++) {
         int previousPixel = pixel[col + 1];
         int currentPixel = pixel[col];
         if (currentPixel != previousPixel && currentPixel == 255) {// to count transitions between white and black
             centralGuardPixel = col + 2;
         }
     }
-    for (int col = centralGuardPixel; col > centralGuardPixel - 4; col--) {
+    for (int col = centralGuardPixel; col > centralGuardPixel - 6; col--) {
         int previousPixel = pixel[col + 1];
         int currentPixel = pixel[col];
         if (currentPixel != previousPixel && currentPixel == 255) {// to count transitions between white and black
@@ -296,249 +289,44 @@ void detectBarcode(Mat inputImgPointer) {
     // regionStart[3]; black
     // colour always goes B, W, B ,W as measured R to L
     // test for pixel to the left after to determine colour
-    int regionStart[4]; // 4 regions, 2 black 2 white, 5th region specifies end of character
+    int region = 0;
+    int regionStart[4]; // 4 regions, 2 black 2 white
     int startingCol = centralGuardBarLeftPixel;
-
-
-    int T1[12];
-    int T2[12];
-    int T3[12];
-    int T4[12];
-    int T4e[12];
-
-    int transitionCounter;
-
     for (int currentDigit = 5; currentDigit >= 0; currentDigit--) {
         // loop through digits from centre to LHS
-        transitionCounter = 0;
+        barCounter = 0;
+        region = 0;
 
         
 
-        for (int col = startingCol-1; transitionCounter < 4; col--) {// 1st transition occurs on end of 1st black bar
+        for (int col = startingCol; barCounter < 4; col--) {
             int previousPixel = pixel[col + 1];
             int currentPixel = pixel[col];
-            
-            if (currentPixel != previousPixel) {// to count transitions between white and black
-                regionStart[transitionCounter] = col;
-                transitionCounter++;
+            if (region == 0) { // finds which region the current digit starts in
+                regionStart[0] = col;
+                region++;
+                continue;
+            }
+            else if (currentPixel != previousPixel) {// to count transitions between white and black
+                regionStart[barCounter] = col;
+                region++;
+                barCounter++;
             }
         }
-        
+        startingCol += 7 * unitSize;
         // redefine unit size for accuracy?
 
         // regions definitions used to find T values
         // not accounting for small differences in which pixel is measured (to the L or R of barrier)
-        T1pixels[currentDigit] = (startingCol - regionStart[1]);
-        T2pixels[currentDigit] = (regionStart[0] - regionStart[2]);
-        T3pixels[currentDigit] = (regionStart[1] - regionStart[3]);
-        T4pixels[currentDigit] = (regionStart[2] - regionStart[3]);
-        // I'll do T4e later, just need to find regionStart[5] and use that
+        T1pixels[currentDigit] = (regionStart[0] - regionStart[2]);
+        T2pixels[currentDigit] = (regionStart[1] - regionStart[3]);
+        T3pixels[currentDigit] = (regionStart[2] - (regionStart[0] - centralUnitSize * 7));
+        T4pixels[currentDigit] = (regionStart[3] - (regionStart[0] - centralUnitSize * 7));
+        // I'll do T4e later, it's a bit harder
 
-        T1[currentDigit] = round((float)(T1pixels[currentDigit] / unitSize));
-        T2[currentDigit] = round((float)(T2pixels[currentDigit] / unitSize));
-        T3[currentDigit] = round((float)(T3pixels[currentDigit] / unitSize));
-        T4[currentDigit] = round((float)(T4pixels[currentDigit] / unitSize));
-
-        startingCol = regionStart[3];
     }
-    // ABOVE LOOP IS PROBABLY OK
-    // ------------------------------------------------------------------------------------------------------------
-    // ------------------------------------------------------------------------------------------------------------
-    // ------------------------------------------------------------------------------------------------------------
-
+    // ABOVE LOOP IS PROBABLY DODGE
     
-
-
-    char outParity[6];
-    int outVal[6];
-    int country = 0;
-
-    //Using t value arrarys - assuming 4 arrays of length 12 with values for each character
-    for (int i = 0; i < 6; i++) {
-        switch (T1[i]) { //setting row value, moving through column options
-        case 2:
-            switch (T2[i]) {
-            case 2:
-                outParity[i] = 'E';
-                outVal[i] = 6;
-                break;
-            case 3:
-                outParity[i] = 'O';
-                outVal[i] = 0;
-                break;
-            case 4:
-                outParity[i] = 'E';
-                outVal[i] = 4;
-                break;
-            case 5:
-                outParity[i] = 'O';
-                outVal[i] = 3;
-                break;
-            }
-            break;
-        case 3:
-            switch (T2[i]) {
-            case 2:
-                outParity[i] = 'O';
-                outVal[i] = 9;
-                break;
-            case 3:
-                outParity[i] = 'E';
-                if (T4[i] == 2) {
-                    outVal[i] = 2;
-                }
-                else if (T4[i] == 3) {
-                    outVal[i] = 0;
-                }
-                break;
-            case 4:
-                outParity[i] = 'O';
-                if (T4[i] == 2) {
-                    outVal[i] = 1;
-                }
-                else if (T4[i] == 1) {
-                    outVal[i] = 7;
-                }
-                break;
-            case 5:
-                outParity[i] = 'E';
-                outVal[i] = 5;
-                break;
-            }
-            break;
-        case 4:
-            switch (T2[i]) {
-            case 2:
-                outParity[i] = 'E';
-                outVal[i] = 9;
-                break;
-            case 3:
-                outParity[i] = 'O';
-                if (T4[i] == 2) {
-                    outVal[i] = 2;
-                }
-                else if (T4[i] == 1) {
-                    outVal[i] = 8;
-                }
-                break;
-            case 4:
-                outParity[i] = 'E';
-                if (T4[i] == 1) {
-                    outVal[i] = 1;
-                }
-                else if (T4[i] == 2) {
-                    outVal[i] = 7;
-                }
-                break;
-            case 5:
-                outParity[i] = 'O';
-                outVal[i] = 5;
-                break;
-            }
-            break;
-        case 5:
-            switch (T2[i]) {
-            case 2:
-                outParity[i] = 'O';
-                outVal[i] = 6;
-                break;
-            case 3:
-                outParity[i] = 'E';
-                outVal[i] = 0;
-                break;
-            case 4:
-                outParity[i] = 'O';
-                outVal[i] = 4;
-                break;
-            case 5:
-                outParity[i] = 'E';
-                outVal[i] = 3;
-                break;
-            }
-            break;
-        }
-    }
-    // --- DECODING RIGHT SIDE ---
-    int leftVal[6];
-
-
-
-
-    // --- CREATING FINAL ARRAY ---
-    int barray[12];
-
-    //barray = outVal + leftVal;
-    for (int i = 0; i < 6; i++) {
-        barray[i] = outVal[i] + leftVal[i];
-    }
-
-
-    // --- CHECK SUM ---
-    // Right to left, sum all odd digits, multiply results by 3
-    // Right to left, sum even digits
-    // Add the two numbers and mod 10 result
-    // REPLACE ALL barray PLACEHOLDER
-    int oddSum = 0;
-    int evenSum = 0;
-    int oeSum = 0;
-    int checkSum = 0;
-
-
-    // i cycling through odd digits of array, starting at digit 1 (position 0)
-    int barrayLength = sizeof(barray) / sizeof(int);
-    for (int i = 1; i < barrayLength; i = i + 2) {
-        oddSum = oddSum + barray[i];     // i cycling through odd digits of array, starting at digit 1 (position 0)
-        evenSum = evenSum + barray[i - 1];      // i-1 allowing access to all the even positions of array
-    }
-    oeSum = 3 * oddSum + evenSum;
-    checkSum = oeSum % 10;
-
-
-    // --- PARITY CODED COUNTRY CODE ---
-    /*
-        O O O O O O = 0
-        O O E O E E = 1
-        O O E E O E = 2
-        O O E E E O = 3
-        O E O O E E = 4
-        O E E O O E = 5
-        O E E E O O = 6
-        O E O E O E = 7
-        O E O E E O = 8
-        O E E O E O = 9
-    */
-
-    
-    if (strcmp(outParity, "OOOOOO") == 0) {
-        country = 0;
-    }
-    else if (strcmp(outParity, "OOEOEE") == 0) {
-        country = 1;
-    }
-    else if (strcmp(outParity, "OOEEOE") == 0) {
-        country = 2;
-    }
-    else if (strcmp(outParity, "OOEEEO") == 0) {
-        country = 3;
-    }
-    else if (strcmp(outParity, "OEOOEE") == 0) {
-        country = 4;
-    }
-    else if (strcmp(outParity, "OEEOOE") == 0) {
-        country = 5;
-    }
-    else if (strcmp(outParity, "OEEEOO") == 0) {
-        country = 6;
-    }
-    else if (strcmp(outParity, "OEOEOE") == 0) {
-        country = 7;
-    }
-    else if (strcmp(outParity, "OEOEEO") == 0) {
-        country = 8;
-    }
-    else if (strcmp(outParity, "OEEOEO") == 0) {
-        country = 9;
-    }
     
 
 

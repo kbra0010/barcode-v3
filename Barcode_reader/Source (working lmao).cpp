@@ -198,14 +198,14 @@ void detectBarcode(Mat inputImgPointer) {
     int centralGuardPixel = (barcodeStartCol + barcodeEndCol) / 2; // in the middle of a 0
 
     // seeking algos for central guard bar midpoint
-    for (int col = centralGuardPixel; col < centralGuardPixel + 4; col++) {
+    for (int col = centralGuardPixel; col < centralGuardPixel + 6; col++) {
         int previousPixel = pixel[col + 1];
         int currentPixel = pixel[col];
         if (currentPixel != previousPixel && currentPixel == 255) {// to count transitions between white and black
             centralGuardPixel = col + 2;
         }
     }
-    for (int col = centralGuardPixel; col > centralGuardPixel - 4; col--) {
+    for (int col = centralGuardPixel; col > centralGuardPixel - 6; col--) {
         int previousPixel = pixel[col + 1];
         int currentPixel = pixel[col];
         if (currentPixel != previousPixel && currentPixel == 255) {// to count transitions between white and black
@@ -334,10 +334,10 @@ void detectBarcode(Mat inputImgPointer) {
         T4pixels[currentDigit] = (regionStart[2] - regionStart[3]);
         // I'll do T4e later, just need to find regionStart[5] and use that
 
-        T1[currentDigit] = round((float)(T1pixels[currentDigit] / unitSize));
-        T2[currentDigit] = round((float)(T2pixels[currentDigit] / unitSize));
-        T3[currentDigit] = round((float)(T3pixels[currentDigit] / unitSize));
-        T4[currentDigit] = round((float)(T4pixels[currentDigit] / unitSize));
+        T1[currentDigit] = ceil((float)T1pixels[currentDigit] / (float)unitSize);
+        T2[currentDigit] = ceil((float)T2pixels[currentDigit] / (float)unitSize);
+        T3[currentDigit] = ceil((float)T3pixels[currentDigit] / (float)unitSize);
+        T4[currentDigit] = ceil((float)T4pixels[currentDigit] / (float)unitSize);
 
         startingCol = regionStart[3];
     }
@@ -351,7 +351,7 @@ void detectBarcode(Mat inputImgPointer) {
 
     char outParity[6];
     int outVal[6];
-    int country = 0;
+    int country;
 
     //Using t value arrarys - assuming 4 arrays of length 12 with values for each character
     for (int i = 0; i < 6; i++) {
@@ -390,7 +390,6 @@ void detectBarcode(Mat inputImgPointer) {
                 else if (T4[i] == 3) {
                     outVal[i] = 0;
                 }
-                break;
             case 4:
                 outParity[i] = 'O';
                 if (T4[i] == 2) {
@@ -399,7 +398,6 @@ void detectBarcode(Mat inputImgPointer) {
                 else if (T4[i] == 1) {
                     outVal[i] = 7;
                 }
-                break;
             case 5:
                 outParity[i] = 'E';
                 outVal[i] = 5;
@@ -420,7 +418,6 @@ void detectBarcode(Mat inputImgPointer) {
                 else if (T4[i] == 1) {
                     outVal[i] = 8;
                 }
-                break;
             case 4:
                 outParity[i] = 'E';
                 if (T4[i] == 1) {
@@ -429,7 +426,6 @@ void detectBarcode(Mat inputImgPointer) {
                 else if (T4[i] == 2) {
                     outVal[i] = 7;
                 }
-                break;
             case 5:
                 outParity[i] = 'O';
                 outVal[i] = 5;
@@ -508,7 +504,6 @@ void detectBarcode(Mat inputImgPointer) {
         O E E O E O = 9
     */
 
-    
     if (strcmp(outParity, "OOOOOO") == 0) {
         country = 0;
     }
